@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr
+from beanie import Document
 
 
-class User(BaseModel):
+class User(Document):
     """ 
         The model will be used 
         as response model 
@@ -11,6 +12,11 @@ class User(BaseModel):
     """
     email: EmailStr
     password: str
+
+    
+    class Settings:
+        name = "users"
+
 
     class Config:
         schema_extra = {
@@ -36,3 +42,4 @@ class UserSignIn(BaseModel):
             "password": "strong!!!"
         }
     }
+    
