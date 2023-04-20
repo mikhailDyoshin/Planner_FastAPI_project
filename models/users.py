@@ -27,19 +27,6 @@ class User(Document):
         }
 
 
-class UserSignIn(BaseModel):
-    """
-        This model will be used 
-        as the data type 
-        when registering a new user.
-    """
-    email: EmailStr
-    password: str
-
-    schema_extra = {
-        "example": {
-            "email": "fastapi@packt.com",
-            "password": "strong!!!"
-        }
-    }
-    
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str

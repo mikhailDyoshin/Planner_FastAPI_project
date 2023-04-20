@@ -1,9 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, status, Depends
 from models.events import Event, EventUpdate
 from database.connection import Database
 from beanie import PydanticObjectId
+from auth.authenticate import authenticate
 
 
 event_router = APIRouter(
@@ -33,7 +34,8 @@ async def retrieve_event(id: PydanticObjectId) -> Event:
 
 
 @event_router.post("/new")
-async def create_event(body: Event) -> dict:
+async def create_event(body: Event, user: str=Depends(authenticate)) -> dict:
+    body.creator = user
     await events_database.save(body)
     return {
         "message": "Event created successfully"
@@ -41,8 +43,19 @@ async def create_event(body: Event) -> dict:
 
 
 @event_router.put("/{id}")
-async def update_event(id: PydanticObjectId, body: EventUpdate) -> Event:
+async def update_event(id: PydanticObjectId, body: EventUpdate, user: str=Depends(authenticate)) -> Event:
+    # Check if the user who's trying to update a record is the record's creator
+    event = await events_database.get(id)
+    if event.creator != user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Operation not allowed",
+        )
+    
+    # Updading the event
     updated_event = await events_database.update(id, body)
+
+    # If the event's not found raise the exeption
     if not updated_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -52,8 +65,19 @@ async def update_event(id: PydanticObjectId, body: EventUpdate) -> Event:
 
 
 @event_router.delete("/{id}")
-async def delete_event(id: PydanticObjectId) -> dict:
+async def delete_event(id: PydanticObjectId, user: str=Depends(authenticate)) -> dict:
+    
+    # Check if the user who's trying to delete a record is the record's creator
+    event_to_delete = await events_database.get(id)
+    if event_to_delete.creator != user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Operation not allowed",
+        )
+    
     event = await events_database.delete(id)
+
+    # If the event's not found raise the exeption
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
