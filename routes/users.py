@@ -31,7 +31,7 @@ async def sign_user_up(user: User) -> dict:
     await users_database.save(user)
 
     return {
-        "message": "User created successfully!"
+        "message": "User created successfully"
     }
 
 
