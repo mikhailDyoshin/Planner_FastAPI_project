@@ -84,5 +84,5 @@ async def delete_event(id: PydanticObjectId, user: str=Depends(authenticate)) ->
             detail="Event with supplied ID does not exist"
         )
     return {
-        "message": "Event deleted successfully"
+        "message": "Event deleted successfully."
     }
